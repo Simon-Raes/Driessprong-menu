@@ -25,6 +25,13 @@ proguard/
 # Log Files
 *.log
 
+# Android Studio files
+*.idea/
+*.iml
+
+# Config files and settings
+configuration.xml
+
 # =========================
 # Operating System Files
 # =========================
