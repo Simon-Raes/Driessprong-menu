@@ -28,7 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/pasta" />
+                android:src="@drawable/garlicbread" />
             <TextView
                 android:id="@+id/textView_item_content"
                 android:padding="8dp"

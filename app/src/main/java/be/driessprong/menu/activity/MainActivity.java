@@ -72,9 +72,9 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         pagerItems.add("cool");
         pagerItems.add("nice");
 
-        headerImages.add(getResources().getDrawable(R.drawable.pizza));
         headerImages.add(getResources().getDrawable(R.drawable.pasta));
         headerImages.add(getResources().getDrawable(R.drawable.pizza));
+        headerImages.add(getResources().getDrawable(R.drawable.spaghetti));
 
         pagerAdapter = new MenuPagerAdapter(getSupportFragmentManager(), pagerItems);
         viewPagerDays.setAdapter(pagerAdapter);
@@ -144,19 +144,22 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     @Override
     public void onFragmentListScrolled(int dy) {
 
+        // Update image position
         imgHeader.setY(imgHeader.getY() - dy / 2);
 
-        // Rounding errors (?) can make the image scroll down too far, fix that here.
+        // Rounding errors (?) can make the image scroll down a bit too far, fix that here.
         if (imgHeader.getY() > 0) {
             imgHeader.setY(0);
         }
+
+        updateAlpha();
 
         originalHeaderImagePosition = imgHeader.getY();
         positionPreStartScroll = imgHeader.getY();
     }
 
     /**
-     * Called when moving between days.
+     * Called when moving between day pages.
      */
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -179,9 +182,16 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             }
 
             imgHeader.setY(positionPreStartScroll + (adjustedOffset * -positionPreStartScroll));
+            updateAlpha();
         }
     }
 
+    private void updateAlpha(){
+        // Update image alpha
+        float alpha = 1 - (-imgHeader.getY() / imgHeader.getMeasuredHeight());
+        System.out.println(alpha);
+        imgHeader.setAlpha(Math.max(0,alpha));
+    }
 
     /**
      * Called when a new day is selected.
