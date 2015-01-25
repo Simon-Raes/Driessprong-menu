@@ -30,6 +30,11 @@ public class MenuPagerAdapter extends FragmentPagerAdapter {
     }
 
     @Override
+    public CharSequence getPageTitle(int position) {
+        return content.get(position);
+    }
+
+    @Override
     public Fragment getItem(int position) {
         return DayMenuFragment.newInstance(content.get(position));
     }

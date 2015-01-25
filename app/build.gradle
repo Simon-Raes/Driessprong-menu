@@ -29,4 +29,6 @@ dependencies {
     compile 'com.android.support:palette-v7:+'
     // Third party
     compile 'com.jakewharton:butterknife:6.0.0'
+    compile 'com.jpardogo.materialtabstrip:library:1.0.8'
+
 }

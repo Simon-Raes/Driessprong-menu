@@ -13,6 +13,8 @@ import android.support.v7.graphics.Palette;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.astuetz.PagerSlidingTabStrip;
+
 import java.util.ArrayList;
 
 import be.driessprong.menu.R;
@@ -39,6 +41,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     ViewPager viewPagerDays;
     @InjectView(R.id.layout_main)
     FrameLayout layMain;
+    @InjectView(R.id.tabs)
+    PagerSlidingTabStrip tabs;
 //    @InjectView(R.id.toolBar_main)
 //    Toolbar toolbar;
 
@@ -53,11 +57,15 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     // Store the off-screen location of the header image. This is only used when starting a swipe to
     // the next screen and then cancelling that action so the pager scrolls back to the previous
     // page. This value then sets the image back to the correct position.
-    private float originalHeaderImagePosition;
+    private float headerOriginalImagePosition;
 
     // Start moving from this location towards the location of the image on the next page. Next page
     // will always have the image at 0 because the list position is reset when changing page.
-    private float positionPreStartScroll;
+    private float headerPositionPreScroll;
+
+    // Start moving from this location towards the location of the tabs on the next page. Next page
+    // will always have the tabs at the same location because list position is reset.
+    private float tabsStartingLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,26 +86,30 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
         pagerAdapter = new MenuPagerAdapter(getSupportFragmentManager(), pagerItems);
         viewPagerDays.setAdapter(pagerAdapter);
-        viewPagerDays.setOnPageChangeListener(this);
 
+        tabs.setViewPager(viewPagerDays);
+        // Listener needs to be set on the tabs, not on the viewpager itself. (Only when using tabs)
+        tabs.setOnPageChangeListener(this);
+
+        tabsStartingLocation = getTabsDefaultLocation();
         updateUi();
     }
 
-
     private void updateUi() {
 
-        generatePaletteForImage();
+        setBackGroundColor();
         setImageDrawableWithFade(imgHeader, headerImages.get(viewPagerDays.getCurrentItem()));
 
     }
 
-    private void generatePaletteForImage() {
+    /**Set the background color based on the active photo.*/
+    private void setBackGroundColor() {
         Bitmap activePhoto = ((BitmapDrawable) headerImages.get(viewPagerDays.getCurrentItem())).getBitmap();
         Palette.generateAsync(activePhoto, new Palette.PaletteAsyncListener() {
             public void onGenerated(Palette palette) {
 
                 ColorDrawable[] colors = new ColorDrawable[2];
-                ColorDrawable newColor = new ColorDrawable(palette.getMutedColor(000000));
+                ColorDrawable newColor = new ColorDrawable(palette.getMutedColor(0));
                 colors[0] = previousColor;
                 colors[1] = newColor;
 
@@ -137,12 +149,14 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         }
     }
 
-
     /**
      * Called when a menu listview is scrolled.
      */
     @Override
     public void onFragmentListScrolled(int dy) {
+
+        // Update tab position
+        tabs.setY(tabs.getY() - dy);
 
         // Update image position
         imgHeader.setY(imgHeader.getY() - dy / 2);
@@ -152,24 +166,23 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             imgHeader.setY(0);
         }
 
-        updateAlpha();
+        updateHeaderAlpha();
 
-        originalHeaderImagePosition = imgHeader.getY();
-        positionPreStartScroll = imgHeader.getY();
+        // Save the current location of the header.
+        headerOriginalImagePosition = imgHeader.getY();
+        headerPositionPreScroll = imgHeader.getY();
+        // Same for tabs.
+        tabsStartingLocation = tabs.getY();
     }
 
     /**
      * Called when moving between day pages.
+     * Return the header and tabs back to their starting positions while moving.
      */
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
         if (positionOffset > 0) {
-
-            if (imgHeader.getY() < -imgHeader.getMeasuredHeight()) {
-                imgHeader.setY(-imgHeader.getMeasuredHeight());
-                positionPreStartScroll = imgHeader.getY();
-            }
 
             // Need to reverse the direction when scrolling to the left.
             float adjustedOffset = 0;
@@ -181,16 +194,27 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
                 adjustedOffset = 1 - positionOffset;
             }
 
-            imgHeader.setY(positionPreStartScroll + (adjustedOffset * -positionPreStartScroll));
-            updateAlpha();
+            // Header
+            // Set the header to be just above the screen so it doesn't have to animate from 300km away.
+            if (imgHeader.getY() < -imgHeader.getMeasuredHeight()) {
+                imgHeader.setY(-imgHeader.getMeasuredHeight());
+                headerPositionPreScroll = imgHeader.getY();
+            }
+            imgHeader.setY(headerPositionPreScroll + (adjustedOffset * (0 - headerPositionPreScroll)));
+
+            updateHeaderAlpha();
+
+
+            // Tabs
+            float moveTabsTo = tabsStartingLocation + (adjustedOffset * (getTabsDefaultLocation() - tabsStartingLocation));
+            tabs.setY(moveTabsTo);
         }
     }
 
-    private void updateAlpha(){
+    private void updateHeaderAlpha(){
         // Update image alpha
         float alpha = 1 - (-imgHeader.getY() / imgHeader.getMeasuredHeight());
-        System.out.println(alpha);
-        imgHeader.setAlpha(Math.max(0,alpha));
+        imgHeader.setAlpha(Math.max(0, alpha));
     }
 
     /**
@@ -198,6 +222,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
      */
     @Override
     public void onPageSelected(int position) {
+        System.out.println("page selected");
+
         updateUi();
     }
 
@@ -207,13 +233,24 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             pagerAdapter.resetListPositions();
             imgHeader.setY(0);
             selectedPage = viewPagerDays.getCurrentItem();
-            positionPreStartScroll = 0;
-            originalHeaderImagePosition = 0;
+            headerPositionPreScroll = 0;
+            headerOriginalImagePosition = 0;
+
+            tabsStartingLocation = tabs.getY();
+
         } else if (state == ViewPager.SCROLL_STATE_IDLE) {
-            // reset imgheader position to its position before the scroll movement started
-            // it was set to -img.height to create a smooth swipe animation to the next day,
-            // but this will create problems if the user does not select the new day/page.
-            imgHeader.setY(originalHeaderImagePosition);
+            // reset imgheader position to its position before the pagescroll movement started.
+            // If the image was very far off-screen then it was set to -img.height at the start of
+            // the animation to create a smooth swipe animation to the next page.
+            // If the user does not select the next page then the image should be set back to its
+            // original offscreen position.
+            imgHeader.setY(headerOriginalImagePosition);
         }
+    }
+
+
+    private float getTabsDefaultLocation(){
+        float start = getResources().getDimension(R.dimen.tabs_offset);
+        return start;
     }
 }
