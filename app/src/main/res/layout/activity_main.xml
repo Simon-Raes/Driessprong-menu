@@ -15,26 +15,26 @@
 
         android:src="@drawable/spaghetti" />
 
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"/>
 
     <com.astuetz.PagerSlidingTabStrip xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/tabs"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_marginTop="@dimen/tabs_offset"
-
         android:background="@android:color/transparent"
         android:textColor="@android:color/white"
         app:pstsPaddingMiddle="true"
         app:pstsIndicatorColor="@android:color/white" />
 
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/viewPager_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent">
 
-    </android.support.v4.view.ViewPager>
+
+
 
     <!--<android.support.v7.widget.Toolbar-->
     <!--android:id="@+id/toolBar_main"-->

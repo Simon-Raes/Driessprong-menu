@@ -27,12 +27,8 @@ import butterknife.InjectView;
 public class MainActivity extends ActionBarActivity implements DayMenuFragment.ScrollListener, ViewPager.OnPageChangeListener {
 
 
-
-
     // TODO: ideas
     // Star rating the food
-
-
 
 
     @InjectView(R.id.imageView_header)
@@ -61,11 +57,20 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
     // Start moving from this location towards the location of the image on the next page. Next page
     // will always have the image at 0 because the list position is reset when changing page.
-    private float headerPositionPreScroll;
+    private float headerAnimationStartLocation;
 
     // Start moving from this location towards the location of the tabs on the next page. Next page
     // will always have the tabs at the same location because list position is reset.
-    private float tabsStartingLocation;
+    private float tabsAnimationStartLocation;
+
+    // Store the location where the tabs WOULD be if they were not capped at the top of the screen.
+    // This is used to make them move back down at the correct point when scrolling back up.
+    private float tabsCalculationLocation;
+
+    // Remember if the tab bar had a background color. Used when starting a swipe to a different page
+    // (backgroundcolor goes away), but then cancelling that and going back to the previous page
+    // (bar gets its color back).
+    private boolean barColoredBeforeSwipe;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,16 +78,7 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
 
-//        setSupportActionBar(toolbar);
-//        getSupportActionBar().setTitle("test");
-
-        pagerItems.add("ok");
-        pagerItems.add("cool");
-        pagerItems.add("nice");
-
-        headerImages.add(getResources().getDrawable(R.drawable.pasta));
-        headerImages.add(getResources().getDrawable(R.drawable.pizza));
-        headerImages.add(getResources().getDrawable(R.drawable.spaghetti));
+        setupPlaceholderLists();
 
         pagerAdapter = new MenuPagerAdapter(getSupportFragmentManager(), pagerItems);
         viewPagerDays.setAdapter(pagerAdapter);
@@ -91,9 +87,10 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         // Listener needs to be set on the tabs, not on the viewpager itself. (Only when using tabs)
         tabs.setOnPageChangeListener(this);
 
-        tabsStartingLocation = getTabsDefaultLocation();
+        tabsAnimationStartLocation = getTabsDefaultLocation();
         updateUi();
     }
+
 
     private void updateUi() {
 
@@ -102,7 +99,9 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
     }
 
-    /**Set the background color based on the active photo.*/
+    /**
+     * Set the background color based on the active photo.
+     */
     private void setBackGroundColor() {
         Bitmap activePhoto = ((BitmapDrawable) headerImages.get(viewPagerDays.getCurrentItem())).getBitmap();
         Palette.generateAsync(activePhoto, new Palette.PaletteAsyncListener() {
@@ -119,6 +118,7 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     layMain.setBackground(colorTrans);
                 } else {
+                    //noinspection deprecation
                     layMain.setBackgroundDrawable(colorTrans);
                 }
 
@@ -156,7 +156,36 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     public void onFragmentListScrolled(int dy) {
 
         // Update tab position
-        tabs.setY(tabs.getY() - dy);
+
+        // init tabs calc location
+        if (tabsCalculationLocation == 0) {
+            tabsCalculationLocation = tabs.getY();
+        }
+
+        // update real calculation location
+        tabsCalculationLocation = tabsCalculationLocation - dy;
+
+
+        if (dy > 0) {
+            if (tabsCalculationLocation < 0) {
+                // Cap the tabs at the top of the screen
+                tabs.setY(0);
+                setTabsBackGroundVisible(true);
+                barColoredBeforeSwipe = true;
+            } else {
+                tabs.setY(tabsCalculationLocation);
+                setTabsBackGroundVisible(false);
+                barColoredBeforeSwipe = false;
+            }
+        } else {
+            if (tabsCalculationLocation >= tabs.getY()) {
+                // Move tabs back down if the calculation location is lower than the visual loc.
+                tabs.setY(tabsCalculationLocation);
+                setTabsBackGroundVisible(false);
+                barColoredBeforeSwipe = false;
+            }
+        }
+
 
         // Update image position
         imgHeader.setY(imgHeader.getY() - dy / 2);
@@ -170,9 +199,10 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
         // Save the current location of the header.
         headerOriginalImagePosition = imgHeader.getY();
-        headerPositionPreScroll = imgHeader.getY();
+        headerAnimationStartLocation = imgHeader.getY();
         // Same for tabs.
-        tabsStartingLocation = tabs.getY();
+        tabsAnimationStartLocation = tabs.getY();
+
     }
 
     /**
@@ -198,32 +228,32 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             // Set the header to be just above the screen so it doesn't have to animate from 300km away.
             if (imgHeader.getY() < -imgHeader.getMeasuredHeight()) {
                 imgHeader.setY(-imgHeader.getMeasuredHeight());
-                headerPositionPreScroll = imgHeader.getY();
+                headerAnimationStartLocation = imgHeader.getY();
             }
-            imgHeader.setY(headerPositionPreScroll + (adjustedOffset * (0 - headerPositionPreScroll)));
+            imgHeader.setY(headerAnimationStartLocation + (adjustedOffset * (0 - headerAnimationStartLocation)));
 
             updateHeaderAlpha();
 
-
             // Tabs
-            float moveTabsTo = tabsStartingLocation + (adjustedOffset * (getTabsDefaultLocation() - tabsStartingLocation));
+            float moveTabsTo = tabsAnimationStartLocation + (adjustedOffset * (getTabsDefaultLocation() - tabsAnimationStartLocation));
             tabs.setY(moveTabsTo);
+            // Remove background color when scrolling the tabs back down.
+            setTabsBackGroundVisible(false);
         }
     }
 
-    private void updateHeaderAlpha(){
+    private void updateHeaderAlpha() {
         // Update image alpha
         float alpha = 1 - (-imgHeader.getY() / imgHeader.getMeasuredHeight());
         imgHeader.setAlpha(Math.max(0, alpha));
     }
+
 
     /**
      * Called when a new day is selected.
      */
     @Override
     public void onPageSelected(int position) {
-        System.out.println("page selected");
-
         updateUi();
     }
 
@@ -233,10 +263,11 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             pagerAdapter.resetListPositions();
             imgHeader.setY(0);
             selectedPage = viewPagerDays.getCurrentItem();
-            headerPositionPreScroll = 0;
+            headerAnimationStartLocation = 0;
             headerOriginalImagePosition = 0;
 
-            tabsStartingLocation = tabs.getY();
+            tabsAnimationStartLocation = tabs.getY(); // =tabsdefaultstartlocation??
+            tabsCalculationLocation = tabs.getY();
 
         } else if (state == ViewPager.SCROLL_STATE_IDLE) {
             // reset imgheader position to its position before the pagescroll movement started.
@@ -245,12 +276,75 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             // If the user does not select the next page then the image should be set back to its
             // original offscreen position.
             imgHeader.setY(headerOriginalImagePosition);
+            if(barColoredBeforeSwipe){
+                setTabsBackGroundVisible(true);
+            }
         }
     }
 
+    private void setTabsBackGroundVisible(boolean visible) {
 
-    private float getTabsDefaultLocation(){
-        float start = getResources().getDimension(R.dimen.tabs_offset);
-        return start;
+        // todo: quick animation from visible to transparent
+        if (visible) {
+            tabs.setBackgroundColor(getResources().getColor(R.color.tabbar));
+        } else {
+            tabs.setBackgroundColor(getResources().getColor(R.color.transparent));
+        }
+
+
+
+
+        /*if (makeVisible && !tabBarCurrentlyColored) {
+            ColorDrawable[] colors = new ColorDrawable[2];
+
+            colors[0] = new ColorDrawable(getResources().getColor(R.color.transparent));
+            colors[1] = new ColorDrawable(getResources().getColor(R.color.tabbar));
+
+            TransitionDrawable colorTrans = new TransitionDrawable(colors);
+            colorTrans.setCrossFadeEnabled(true);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                tabs.setBackground(colorTrans);
+            } else {
+                //noinspection deprecation
+                tabs.setBackgroundDrawable(colorTrans);
+            }
+
+            colorTrans.startTransition(250);
+            tabBarCurrentlyColored = true;
+        } else if(!makeVisible && tabBarCurrentlyColored) {
+            ColorDrawable[] colors = new ColorDrawable[2];
+
+            colors[0] = new ColorDrawable(getResources().getColor(R.color.tabbar));
+            colors[1] = new ColorDrawable(getResources().getColor(R.color.transparent));
+
+            TransitionDrawable colorTrans = new TransitionDrawable(colors);
+            colorTrans.setCrossFadeEnabled(true);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                tabs.setBackground(colorTrans);
+            } else {
+                //noinspection deprecation
+                tabs.setBackgroundDrawable(colorTrans);
+            }
+
+            colorTrans.startTransition(250);
+            tabBarCurrentlyColored =false;
+        }*/
+    }
+
+
+    private float getTabsDefaultLocation() {
+        return getResources().getDimension(R.dimen.tabs_offset);
+    }
+
+    private void setupPlaceholderLists() {
+        pagerItems.add("Maandag");
+        pagerItems.add("Dinsdag");
+        pagerItems.add("Woensdag");
+
+        headerImages.add(getResources().getDrawable(R.drawable.pasta));
+        headerImages.add(getResources().getDrawable(R.drawable.pizza));
+        headerImages.add(getResources().getDrawable(R.drawable.spaghetti));
     }
 }
