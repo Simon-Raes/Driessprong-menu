@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import be.driessprong.menu.R;
 import be.driessprong.menu.adapter.MenuPagerAdapter;
 import be.driessprong.menu.fragment.DayMenuFragment;
+import be.driessprong.menu.model.Day;
+import be.driessprong.menu.parse.WeekMenuLoader;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 
-public class MainActivity extends ActionBarActivity implements DayMenuFragment.ScrollListener, ViewPager.OnPageChangeListener {
+public class MainActivity extends ActionBarActivity implements DayMenuFragment.ScrollListener, ViewPager.OnPageChangeListener, WeekMenuLoader.MenuCallback {
 
 
     // TODO: ideas
@@ -44,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
     private ColorDrawable previousColor = new ColorDrawable(0);
 
-    private ArrayList<String> pagerItems = new ArrayList<String>();
+    private ArrayList<Day> pagerItems = new ArrayList<>();
     private ArrayList<Drawable> headerImages = new ArrayList<>();
 
     MenuPagerAdapter pagerAdapter;
@@ -72,6 +74,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     // (bar gets its color back).
     private boolean barColoredBeforeSwipe;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,14 +93,23 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
         tabsAnimationStartLocation = getTabsDefaultLocation();
         updateUi();
+
+        WeekMenuLoader weekMenuLoader = new WeekMenuLoader(this);
+        weekMenuLoader.findInBackground();
+
+    }
+
+    @Override
+    public void foundMenu(ArrayList<Day> days) {
+        pagerItems.clear();
+        pagerItems.addAll(days);
+        pagerAdapter.notifyDataSetChanged();
     }
 
 
     private void updateUi() {
-
         setBackGroundColor();
         setImageDrawableWithFade(imgHeader, headerImages.get(viewPagerDays.getCurrentItem()));
-
     }
 
     /**
@@ -129,8 +142,7 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         });
     }
 
-
-    public static void setImageDrawableWithFade(final ImageView imageView, final Drawable drawable) {
+    private void setImageDrawableWithFade(final ImageView imageView, final Drawable drawable) {
         Drawable currentDrawable = imageView.getDrawable();
         if ((currentDrawable != null) && (currentDrawable instanceof TransitionDrawable)) {
             currentDrawable = ((TransitionDrawable) currentDrawable).getDrawable(1);
@@ -225,7 +237,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             }
 
             // Header
-            // Set the header to be just above the screen so it doesn't have to animate from 300km away.
+            // Set the header to be just above the screen if it was farther offscreen.
+            // This makes it so the header doesn't have to animate from 300km away.
             if (imgHeader.getY() < -imgHeader.getMeasuredHeight()) {
                 imgHeader.setY(-imgHeader.getMeasuredHeight());
                 headerAnimationStartLocation = imgHeader.getY();
@@ -268,6 +281,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
             tabsAnimationStartLocation = tabs.getY(); // =tabsdefaultstartlocation??
             tabsCalculationLocation = tabs.getY();
+            barColoredBeforeSwipe = false;
+
 
         } else if (state == ViewPager.SCROLL_STATE_IDLE) {
             // reset imgheader position to its position before the pagescroll movement started.
@@ -339,12 +354,17 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     }
 
     private void setupPlaceholderLists() {
-        pagerItems.add("Maandag");
-        pagerItems.add("Dinsdag");
-        pagerItems.add("Woensdag");
 
+
+//        pagerItems.add(new Day("qsdf","qsdfq", new Soup("qsdf","sdfq"), new MainCourse()));
+//        pagerItems.add(new Day("qsdf222","qsdfq", new Soup("qsdf","sdfq"), new MainCourse()));
+
+        // todo: get photo from parse data
         headerImages.add(getResources().getDrawable(R.drawable.pasta));
         headerImages.add(getResources().getDrawable(R.drawable.pizza));
         headerImages.add(getResources().getDrawable(R.drawable.spaghetti));
+        headerImages.add(getResources().getDrawable(R.drawable.frieten));
     }
+
+
 }

@@ -9,26 +9,30 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import be.driessprong.menu.R;
+import be.driessprong.menu.model.Ingredient;
+import be.driessprong.menu.model.MainCourse;
+import be.driessprong.menu.model.MenuItem;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 /**
  * Created by Simon Raes on 24/01/2015.
  */
-public class DayRecyclerAdapater extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MenuRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_CONTENT = 1;
 
-    private ArrayList<String> items;
+    // todo: use day object instead of string
+    private ArrayList<MenuItem> items;
 
-    public DayRecyclerAdapater(ArrayList<String> items) {
+    public MenuRecyclerAdapter(ArrayList<MenuItem> items) {
         this.items = items;
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return items.size() + 1;
     }
 
     @Override
@@ -63,7 +67,23 @@ public class DayRecyclerAdapater extends RecyclerView.Adapter<RecyclerView.ViewH
         if (viewHolder instanceof HeaderViewHolder) {
             // empty header doesn't have anything to bind
         } else if (viewHolder instanceof ContentViewHolder) {
-            ((ContentViewHolder) viewHolder).txtItem.setText(items.get(i-1));
+            MenuItem menuItem = items.get(i - 1);
+
+            ((ContentViewHolder) viewHolder).txtItem.setText(menuItem.getName());
+
+            if (menuItem instanceof MainCourse) {
+                if (((MainCourse) menuItem).getIngredients() != null) {
+                    ArrayList<Ingredient> ingredients = ((MainCourse) menuItem).getIngredients();
+                    StringBuilder result = new StringBuilder();
+
+                    String newline = "";
+                    for (Ingredient ingredient : ingredients) {
+                        result.append(newline).append(ingredient.getName());
+                        newline = "\n";
+                    }
+                    ((ContentViewHolder) viewHolder).txtContent.setText(result);
+                }
+            }
         }
     }
 
@@ -72,6 +92,8 @@ public class DayRecyclerAdapater extends RecyclerView.Adapter<RecyclerView.ViewH
 
         @InjectView(R.id.textView_item_title)
         TextView txtItem;
+        @InjectView(R.id.textView_item_content)
+        TextView txtContent;
 
         public ContentViewHolder(View itemView) {
             super(itemView);
@@ -83,7 +105,7 @@ public class DayRecyclerAdapater extends RecyclerView.Adapter<RecyclerView.ViewH
 
         public HeaderViewHolder(View itemView) {
             super(itemView);
-
+            // Empty view
         }
     }
 

@@ -12,7 +12,9 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 
 import be.driessprong.menu.R;
-import be.driessprong.menu.adapter.DayRecyclerAdapater;
+import be.driessprong.menu.adapter.MenuRecyclerAdapter;
+import be.driessprong.menu.model.Day;
+import be.driessprong.menu.model.MenuItem;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
@@ -22,23 +24,20 @@ import butterknife.InjectView;
 public class DayMenuFragment extends Fragment {
 
     private ArrayList<String> dayItems = new ArrayList<>();
+    private Day day;
 
     @InjectView(R.id.recycler_day)
     RecyclerView recyclerDay;
 
+    private ScrollListener delegate;
     public interface ScrollListener {
         public void onFragmentListScrolled(int dy);
     }
 
-    private ScrollListener delegate;
-
-    public static DayMenuFragment newInstance(String item) {
-
-
+    public static DayMenuFragment newInstance(Day item) {
         DayMenuFragment f = new DayMenuFragment();
-
         Bundle args = new Bundle();
-        args.putString("item", item);
+        args.putParcelable("day", item);
         f.setArguments(args);
 
         return f;
@@ -57,21 +56,20 @@ public class DayMenuFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dayItems.add("menu item 1");
-        dayItems.add("menu item 2");
-        dayItems.add("menu item en 3");
-        dayItems.add("menu item 1");
-        dayItems.add("menu item 2");
-        dayItems.add("menu item en 3");
-        dayItems.add("menu item 1");
-        dayItems.add("menu item 2");
-        dayItems.add("menu item en 3");
-        dayItems.add("menu item 1");
-        dayItems.add("menu item 2");
-        dayItems.add("menu item en 3");
-        dayItems.add("menu item 1");
-        dayItems.add("menu item 2");
-        dayItems.add("menu item en 3");
+
+        this.day = getArguments().getParcelable("day");
+
+        dayItems.add(day.getSoup().getName());
+        dayItems.add(day.getSoup().getName());
+        dayItems.add(day.getSoup().getName());
+        dayItems.add(day.getSoup().getName());
+        dayItems.add(day.getSoup().getName());
+
+        System.out.println(dayItems.get(0));
+
+        dayItems.add(day.getMainCourse().getName());
+        System.out.println(dayItems.get(5));
+
     }
 
     @Override
@@ -80,8 +78,10 @@ public class DayMenuFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_day_menu, container, false);
         ButterKnife.inject(this, view);
-
-        DayRecyclerAdapater adapter = new DayRecyclerAdapater(dayItems);
+        ArrayList<MenuItem> menuItems = new ArrayList<>();
+        menuItems.add(day.getSoup());
+        menuItems.add(day.getMainCourse());
+        MenuRecyclerAdapter adapter = new MenuRecyclerAdapter(menuItems);
         recyclerDay.setAdapter(adapter);
         recyclerDay.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         recyclerDay.setOnScrollListener(new RecyclerScrollListener());
@@ -100,6 +100,10 @@ public class DayMenuFragment extends Fragment {
 
     public void resetScrollPosition(){
         ((LinearLayoutManager)recyclerDay.getLayoutManager()).scrollToPosition(0);
+    }
+
+    public void updateListContent(){
+        recyclerDay.getAdapter().notifyDataSetChanged();
     }
 
 }

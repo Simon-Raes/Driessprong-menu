@@ -3,23 +3,23 @@ package be.driessprong.menu.adapter;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import be.driessprong.menu.fragment.DayMenuFragment;
+import be.driessprong.menu.model.Day;
 
 /**
  * Created by Simon Raes on 24/01/2015.
  */
 public class MenuPagerAdapter extends FragmentPagerAdapter {
 
-    private ArrayList<String> content;
+    private ArrayList<Day> content;
     private HashMap<Integer, Fragment> registeredFragments = new HashMap<>();
 
-    public MenuPagerAdapter(FragmentManager fm, ArrayList<String> content){
+    public MenuPagerAdapter(FragmentManager fm, ArrayList<Day> content){
         super(fm);
         this.content = content;
     }
@@ -31,7 +31,8 @@ public class MenuPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return content.get(position);
+        System.out.println("sending title "+content.get(position).getTitle());
+        return content.get(position).getTitle();
     }
 
     @Override
