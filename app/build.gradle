@@ -30,6 +30,7 @@ dependencies {
     // Third party
     compile 'com.jakewharton:butterknife:6.0.0'
     compile 'com.jpardogo.materialtabstrip:library:1.0.8'
+    compile 'com.squareup.picasso:picasso:2.4.0'
     // Parse
     compile files('libs/Parse-1.8.2.jar')
     compile files('libs/bolts-android-1.1.4.jar')

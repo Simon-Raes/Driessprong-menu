@@ -4,7 +4,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -69,8 +72,11 @@ public class MenuRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         } else if (viewHolder instanceof ContentViewHolder) {
             MenuItem menuItem = items.get(i - 1);
 
+            // Dish name
             ((ContentViewHolder) viewHolder).txtItem.setText(menuItem.getName());
-
+            // Dish photo
+            Picasso.with(((ContentViewHolder) viewHolder).imgDish.getContext()).load(menuItem.getPhoto()).into(((ContentViewHolder) viewHolder).imgDish);
+            // Dish ingredients
             if (menuItem instanceof MainCourse) {
                 if (((MainCourse) menuItem).getIngredients() != null) {
                     ArrayList<Ingredient> ingredients = ((MainCourse) menuItem).getIngredients();
@@ -82,6 +88,7 @@ public class MenuRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         newline = "\n";
                     }
                     ((ContentViewHolder) viewHolder).txtContent.setText(result);
+
                 }
             }
         }
@@ -94,6 +101,8 @@ public class MenuRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         TextView txtItem;
         @InjectView(R.id.textView_item_content)
         TextView txtContent;
+        @InjectView(R.id.imageView_dish)
+        ImageView imgDish;
 
         public ContentViewHolder(View itemView) {
             super(itemView);

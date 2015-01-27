@@ -25,16 +25,16 @@
                 android:layout_height="wrap_content" />
 
             <ImageView
+                android:id="@+id/imageView_dish"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/item_photo_height"
-                android:scaleType="centerCrop"
-                android:src="@drawable/garlicbread" />
+                android:scaleType="centerCrop" />
+
             <TextView
                 android:id="@+id/textView_item_content"
                 android:padding="8dp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                />
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
 
