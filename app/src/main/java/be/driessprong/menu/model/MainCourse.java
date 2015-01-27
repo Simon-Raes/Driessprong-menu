@@ -42,13 +42,13 @@ public class MainCourse extends MenuItem implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(this.ingredients);
+        dest.writeList(this.ingredients);
         dest.writeString(this.name);
         dest.writeString(this.photo);
     }
 
     private MainCourse(Parcel in) {
-        this.ingredients = (ArrayList<Ingredient>) in.readSerializable();
+        this.ingredients = in.readArrayList(null);
         this.name = in.readString();
         this.photo = in.readString();
     }
