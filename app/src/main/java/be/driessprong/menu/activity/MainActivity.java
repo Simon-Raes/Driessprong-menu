@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -74,6 +75,7 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
     // (bar gets its color back).
     private boolean barColoredBeforeSwipe;
 
+    private boolean tabsInForeground = true;
 
 
     @Override
@@ -226,6 +228,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
         if (positionOffset > 0) {
 
+            tabsToBackground();
+
             // Need to reverse the direction when scrolling to the left.
             float adjustedOffset = 0;
             if (position == selectedPage) {
@@ -272,6 +276,9 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
     @Override
     public void onPageScrollStateChanged(int state) {
+
+        tabsToForeground();
+
         if (viewPagerDays.getCurrentItem() != selectedPage && state == ViewPager.SCROLL_STATE_IDLE) {
             pagerAdapter.resetListPositions();
             imgHeader.setY(0);
@@ -283,7 +290,6 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             tabsCalculationLocation = tabs.getY();
             barColoredBeforeSwipe = false;
 
-
         } else if (state == ViewPager.SCROLL_STATE_IDLE) {
             // reset imgheader position to its position before the pagescroll movement started.
             // If the image was very far off-screen then it was set to -img.height at the start of
@@ -291,9 +297,28 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
             // If the user does not select the next page then the image should be set back to its
             // original offscreen position.
             imgHeader.setY(headerOriginalImagePosition);
-            if(barColoredBeforeSwipe){
+            if (barColoredBeforeSwipe) {
                 setTabsBackGroundVisible(true);
             }
+        }
+    }
+
+
+    private void tabsToForeground() {
+        if (!tabsInForeground) {
+            tabs.bringToFront();
+            tabs.getParent().requestLayout();
+            ((View) tabs.getParent()).invalidate();
+            tabsInForeground = true;
+        }
+    }
+
+    private void tabsToBackground() {
+        if(tabsInForeground) {
+            viewPagerDays.bringToFront();
+            viewPagerDays.getParent().requestLayout();
+            ((View) viewPagerDays.getParent()).invalidate();
+            tabsInForeground = false;
         }
     }
 
@@ -302,8 +327,10 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
         // todo: quick animation from visible to transparent
         if (visible) {
             tabs.setBackgroundColor(getResources().getColor(R.color.tabbar));
+
         } else {
             tabs.setBackgroundColor(getResources().getColor(R.color.transparent));
+
         }
 
 
@@ -355,11 +382,8 @@ public class MainActivity extends ActionBarActivity implements DayMenuFragment.S
 
     private void setupPlaceholderLists() {
 
-
-//        pagerItems.add(new Day("qsdf","qsdfq", new Soup("qsdf","sdfq"), new MainCourse()));
-//        pagerItems.add(new Day("qsdf222","qsdfq", new Soup("qsdf","sdfq"), new MainCourse()));
-
-        // todo: get photo from parse data
+        // todo: real header images
+        // todo: real food images in parse
         headerImages.add(getResources().getDrawable(R.drawable.pasta));
         headerImages.add(getResources().getDrawable(R.drawable.pizza));
         headerImages.add(getResources().getDrawable(R.drawable.spaghetti));
