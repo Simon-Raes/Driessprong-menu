@@ -3,23 +3,33 @@ package be.driessprong.menu.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.parse.ParseClassName;
-import com.parse.ParseObject;
+import java.util.Date;
 
 /**
  * Created by Simon Raes on 26/01/2015.
  */
 
 public class Day implements Parcelable {
+
+    private Date date;
     private String title, photo;
     private Soup soup;
     private MainCourse mainCourse;
 
-    public Day(String title, String photo, Soup soup, MainCourse mainCourse){
+    public Day(Date date, String title, String photo, Soup soup, MainCourse mainCourse){
+        this.date = date;
         this.title = title;
         this.photo = photo;
         this.soup = soup;
         this.mainCourse = mainCourse;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     public String getTitle() {

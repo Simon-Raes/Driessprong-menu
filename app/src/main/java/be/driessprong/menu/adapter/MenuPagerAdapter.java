@@ -10,9 +10,11 @@ import java.util.HashMap;
 
 import be.driessprong.menu.fragment.DayMenuFragment;
 import be.driessprong.menu.model.Day;
+import be.driessprong.menu.util.DateUtils;
 
 /**
  * Created by Simon Raes on 24/01/2015.
+ * Adapter for the ViewPager that holds the different days.
  */
 public class MenuPagerAdapter extends FragmentPagerAdapter {
 
@@ -31,8 +33,7 @@ public class MenuPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        System.out.println("sending title "+content.get(position).getTitle());
-        return content.get(position).getTitle();
+        return DateUtils.getFormattedDayTitle(content.get(position).getDate());
     }
 
     @Override
@@ -60,5 +61,4 @@ public class MenuPagerAdapter extends FragmentPagerAdapter {
             }
         }
     }
-
 }

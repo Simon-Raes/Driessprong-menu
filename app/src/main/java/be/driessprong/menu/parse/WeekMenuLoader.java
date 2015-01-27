@@ -7,6 +7,7 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import be.driessprong.menu.model.Day;
@@ -33,8 +34,12 @@ public class WeekMenuLoader {
     public void findInBackground() {
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Day");
+
+        // Get the menu for this week.
         query.whereGreaterThan("Date", DateUtils.getFirstDateOfWeek());
         query.whereLessThan("Date", DateUtils.getLastDateOfWeek());
+
+        // Also load all contained objects.
         query.include("Soup");
         query.include("Main_course");
         query.include("Main_course.Ingredients");
@@ -49,6 +54,7 @@ public class WeekMenuLoader {
 
                     for (ParseObject parseDay : parseDays) {
 
+                        Date date = parseDay.getDate("Date");
                         String title = parseDay.getString("Title");
                         String photo = parseDay.getString("Photo");
                         Soup soup = new Soup(parseDay.getParseObject("Soup").getString("Name"), parseDay.getParseObject("Soup").getString("Photo"));
@@ -63,7 +69,7 @@ public class WeekMenuLoader {
                             }
                         }
 
-                        Day day = new Day(title, photo, soup, mainCourse);
+                        Day day = new Day(date, title, photo, soup, mainCourse);
                         days.add(day);
 
                     }
